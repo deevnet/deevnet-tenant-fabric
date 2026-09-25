@@ -1,7 +1,9 @@
 # Deevnet Tenant Fabric
 #
-# Credentials are never stored here. The image factory renders them from the
-# inventory vault; every target below sources that file.
+# Credentials are never stored, here or anywhere: every target below fetches the
+# hypervisor's Proxmox token per run with the image factory's scripts/pve-creds
+# (OpenBao by default, the inventory vault as fallback) and evals it into its
+# own environment. Nothing is written to disk (Build-Time Secrets runbook).
 
 SHELL := /usr/bin/bash
 .SHELLFLAGS := -euo pipefail -c
@@ -9,8 +11,12 @@ SHELL := /usr/bin/bash
 .DEFAULT_GOAL := help
 
 IMAGE_FACTORY ?= $(CURDIR)/../deevnet-image-factory
-PVE_NODE      ?= pve2
-PVE_ENV       := $(IMAGE_FACTORY)/build/pve-env/$(PVE_NODE).env
+# The hypervisor, by inventory name, which since ADR-0008 is also its Proxmox
+# node name. It used to be the slot name "pve2", read from a rendered file that
+# was never refreshed - the stale node name pve-node-rename.md warns about.
+PVE_HOST      ?= dv02hyp002p02
+PVE_CREDS     := $(IMAGE_FACTORY)/scripts/pve-creds
+CREDS         := eval "$$($(PVE_CREDS) $(PVE_HOST) $(PVE_HOST))"
 
 FABRIC  ?= fabric/mobile-dv02hyp002p02
 
@@ -19,7 +25,7 @@ FABRIC  ?= fabric/mobile-dv02hyp002p02
 # non-interactive run (no TTY, CI, or an agent driving it).
 TF_APPROVE := $(if $(AUTO),-auto-approve,)
 
-.PHONY: help creds fabric-init fabric-plan fabric-apply fmt validate
+.PHONY: help fabric-init fabric-plan fabric-apply fmt validate
 
 help:
 	@echo "Deevnet tenant fabric - the hypervisor's readiness for tenants."
@@ -31,22 +37,16 @@ help:
 	@echo
 	@echo "Tenants are not built here: the Deevnet API builds them (ADR-0015)."
 
-creds:
-	$(MAKE) -C "$(IMAGE_FACTORY)" $(PVE_NODE)-env
-
-$(PVE_ENV):
-	$(MAKE) creds
-
-fabric-init: $(PVE_ENV)
-	source "$(PVE_ENV)"
+fabric-init:
+	$(CREDS)
 	terraform -chdir=$(FABRIC) init
 
-fabric-plan: $(PVE_ENV)
-	source "$(PVE_ENV)"
+fabric-plan:
+	$(CREDS)
 	terraform -chdir=$(FABRIC) plan
 
-fabric-apply: $(PVE_ENV)
-	source "$(PVE_ENV)"
+fabric-apply:
+	$(CREDS)
 	terraform -chdir=$(FABRIC) apply $(TF_APPROVE)
 
 fmt:

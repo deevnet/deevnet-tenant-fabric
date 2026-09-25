@@ -51,5 +51,7 @@ make fabric-init && make fabric-apply     # once, before any tenant
 make validate                             # fmt check + validate
 ```
 
-Credentials are never stored here: the image factory renders them from the
-inventory vault, and every target sources that file.
+Credentials are never stored, here or on disk anywhere: every target fetches the
+hypervisor's Proxmox token per run with the image factory's `scripts/pve-creds`
+(OpenBao by default; `PVE_CREDS_SOURCE=inventory` reads the vault directly when
+OpenBao is down) and evals it into its own environment.
