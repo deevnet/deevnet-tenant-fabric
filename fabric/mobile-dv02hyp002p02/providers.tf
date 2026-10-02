@@ -29,5 +29,7 @@ provider "proxmox" {
   # Normalising here means one credentials file serves both tools.
   endpoint  = replace(var.proxmox_url, "/api2/json", "")
   api_token = "${var.proxmox_token_id}=${var.proxmox_token_secret}"
-  insecure  = true
+  # Verified: the hypervisor serves a site certificate (CHG-0032), and the
+  # Builder trusts the site root at the OS level.
+  insecure = false
 }
