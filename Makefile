@@ -2,7 +2,7 @@
 #
 # Credentials are never stored, here or anywhere: every target below fetches the
 # hypervisor's Proxmox token per run with the image factory's scripts/pve-creds
-# (OpenBao by default, the inventory vault as fallback) and evals it into its
+# (from the inventory vault, CHG-0037) and evals it into its
 # own environment. Nothing is written to disk (Build-Time Secrets runbook).
 
 SHELL := /usr/bin/bash

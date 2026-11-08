@@ -28,5 +28,4 @@ this repo disagrees with those, the ADRs win.
 - **An SDN apply is cluster-wide.** The API serialises its own applies; don't
   run `fabric-apply` while a tenant is being built.
 - **Credentials are never stored, and never written to disk.** Every target evals
-  the image factory's `scripts/pve-creds` output (OpenBao, or the inventory vault
-  with `PVE_CREDS_SOURCE=inventory`). Don't reintroduce a rendered env file.
+  the image factory's `scripts/pve-creds` output (from the inventory vault, CHG-0037). Don't reintroduce a rendered env file.
